@@ -1,0 +1,126 @@
+.App {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.App h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #3B82F6;
+  margin-bottom: 2.5rem;
+  letter-spacing: -0.5px;
+}
+
+/* --- 1. '카드' UI --- */
+.card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  margin-bottom: 2rem;
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03),
+    0 2px 4px -2px rgba(0, 0, 0, 0.03);
+}
+
+/* --- 2. 검색 폼 스타일 (2단 구조) --- */
+.search-form h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #1a202c;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* 3열 그리드 레이아웃 */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.form-group input,
+.form-group select {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* --- 3. 하단 2열 배치 (키워드 + 버튼) --- */
+.keywords-group {
+  grid-column: span 2;
+}
+
+.button-group {
+  grid-column: span 1;
+}
+
+.submit-button {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+
+  background-color: #3B82F6;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3),
+    0 2px 4px -2px rgba(59, 130, 246, 0.2);
+}
+
+.submit-button:hover {
+  background-color: #2563EB;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px -3px rgba(59, 130, 246, 0.3),
+    0 4px 6px -3px rgba(59, 130, 246, 0.2);
+}
+
+/* --- 4. 차트 카드 스타일 --- */
+.chart-container {
+  padding-bottom: 2.5rem;
+}
+
+.chart-placeholder p {
+  color: #718096;
+  font-size: 1rem;
+  font-weight: 500;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f7fafc;
+  border-radius: 8px;
+  border: 1px dashed #e2e8f0;
+}

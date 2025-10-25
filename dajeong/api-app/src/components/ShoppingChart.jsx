@@ -1,9 +1,28 @@
 import { useMemo } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Doughnut } from "react-chartjs-2";
 import { useShopping } from "../context/ShoppingProvider";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const AGE_LABELS = {
   10: "10대",
@@ -13,125 +32,143 @@ const AGE_LABELS = {
   50: "50대",
   60: "60대 이상",
 };
+
 const AGE_ORDER = ["10", "20", "30", "40", "50", "60"];
 
-const BG_COLORS = [
-  "rgba(255, 99, 132, 0.2)",
-  "rgba(54, 162, 235, 0.2)",
-  "rgba(255, 206, 86, 0.2)",
-  "rgba(75, 192, 192, 0.2)",
-  "rgba(153, 102, 255, 0.2)",
-  "rgba(255, 159, 64, 0.2)",
-];
-const BORDER_COLORS = [
-  "rgba(255, 99, 132, 1)",
-  "rgba(54, 162, 235, 1)",
-  "rgba(255, 206, 86, 1)",
-  "rgba(75, 192, 192, 1)",
-  "rgba(153, 102, 255, 1)",
-  "rgba(255, 159, 64, 1)",
+const CHART_COLORS = [
+  "#3B82F6",
+  "#10B981",
+  "#F97316",
+  "#EC4899",
+  "#8B5CF6",
+  "#06B6D4",
 ];
 
-export default function ShoppingChart() {
+function ShoppingChart() {
   const { chartData, loading, error } = useShopping();
 
-  const { labels, values } = useMemo(() => {
-    const rows = Array.isArray(chartData?.[0]?.data) ? chartData[0].data : [];
-    if (rows.length === 0) return { labels: [], values: [] };
+  if (loading || error || !Array.isArray(chartData) || chartData.length === 0) {
+    return (
+      <div className="card chart-container chart-placeholder">
+        <p>
+          {loading
+            ? "데이터를 불러오는 중입니다..."
+            : error
+            ? `오류가 발생했습니다: ${error}`
+            : '분석할 키워드를 입력하고 "분석하기"를 눌러주세요.'}
+        </p>
+      </div>
+    );
+  }
 
-    // 1) 연령대별 합계 구하기
-    const sumByAge = {};
+  const { labels, datasets } = useMemo(() => {
+    const rows = Array.isArray(chartData?.[0]?.data) ? chartData[0].data : [];
+
+    const periodSet = new Set(rows.map((r) => r.period));
+    const periods = Array.from(periodSet).sort();
+
+    const map = {};
     for (const r of rows) {
+      const period = r.period;
       const age = String(r.group ?? "");
       const ratio = Number(r.ratio);
-      if (!age || Number.isNaN(ratio)) continue;
-      sumByAge[age] = (sumByAge[age] ?? 0) + ratio;
+      if (!period || !age || Number.isNaN(ratio)) continue;
+      if (!map[period]) map[period] = {};
+      map[period][age] = ratio;
     }
 
-    // 2) 존재하는 연령대만 고정 순서대로 정렬
-    const present = AGE_ORDER.filter((a) => sumByAge[a] != null);
+    const lines = AGE_ORDER.map((age, idx) => {
+      const color = CHART_COLORS[idx % CHART_COLORS.length];
+      const series = periods.map((p) => map[p]?.[age] ?? null);
+      return {
+        label: AGE_LABELS[age] ?? age,
+        data: series,
+        borderColor: color,
+        backgroundColor: `${color}33`,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        spanGaps: true,
+      };
+    }).filter((ds) => ds.data.some((v) => v !== null));
 
-    // 3) 전체 합으로 나눠 정규화(합계 = 100%)
-    const total = present.reduce((acc, a) => acc + sumByAge[a], 0) || 1;
-    const percentages = present.map((a) => (sumByAge[a] / total) * 100);
-
-    return {
-      labels: present.map((a) => AGE_LABELS[a] ?? a),
-      values: percentages,
-    };
+    return { labels: periods, datasets: lines };
   }, [chartData]);
-
-  // 기본 예제 스타일의 data 객체
-  const data = useMemo(() => {
-    if (labels.length === 0) return null;
-
-    const need = labels.length;
-    const bg = BG_COLORS.slice(0, need);
-    const bd = BORDER_COLORS.slice(0, need);
-    while (bg.length < need) {
-      const i = bg.length;
-      const hue = Math.round((i * 57) % 360);
-      bg.push(`hsla(${hue}, 70%, 60%, 0.25)`);
-      bd.push(`hsl(${hue}, 70%, 40%)`);
-    }
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: "연령대별 비중(%)",
-          data: values.map((v) => (Number.isFinite(v) ? v : 0)),
-          backgroundColor: bg,
-          borderColor: bd,
-          borderWidth: 1,
-        },
-      ],
-    };
-  }, [labels, values]);
 
   const options = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
-      cutout: "60%",
       plugins: {
-        legend: { position: "right" },
+        legend: {
+          position: "bottom",
+          labels: { usePointStyle: true, padding: 20 },
+        },
+        title: {
+          display: true,
+          text: `연령대별 상대적 검색량 추이`,
+          font: { size: 16, weight: "600" },
+          padding: { bottom: 20 },
+        },
         tooltip: {
+          mode: "index",
+          intersect: false,
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          titleFont: { size: 13, weight: "bold" },
+          bodyFont: { size: 12 },
+          padding: 10,
+          cornerRadius: 4,
+          usePointStyle: true,
           callbacks: {
             label: (ctx) => {
-              const label = ctx.label ?? "";
-              const val = Number(ctx.parsed) || 0;
-              return `${label}: ${val.toFixed(1)}%`;
+              const label = ctx.dataset.label ?? "";
+              const val = ctx.parsed?.y;
+
+              return `${label}: ${val == null ? "-" : val.toFixed(2)}`;
             },
           },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "상대적 검색량",
+            font: { size: 12, weight: "500" },
+          },
+          grid: { color: "#e2e8f0" },
+        },
+        x: {
+          title: {
+            display: true,
+            text: "기간",
+            font: { size: 12, weight: "500" },
+          },
+          grid: { display: false },
         },
       },
     }),
     []
   );
 
-  return (
-    <div className="card" style={{ padding: "1rem" }}>
-      <h2 style={{ marginBottom: "1rem" }}>검색어별 연령대 분포</h2>
+  if (!labels || labels.length === 0 || !datasets || datasets.length === 0) {
+    return (
+      <div className="card chart-container chart-placeholder">
+        <p>표시할 데이터가 없습니다. 기간/연령대/키워드를 확인해 주세요.</p>
+      </div>
+    );
+  }
 
-      {loading && <p>데이터를 불러오는 중입니다…</p>}
-      {error && (
-        <div style={{ color: "crimson" }}>
-          <p>⚠️ 오류 발생:</p>
-          <pre>{error}</pre>
-        </div>
-      )}
-      {!loading && !error && !chartData && (
-        <p>검색어를 입력하고 “분석하기”를 눌러주세요.</p>
-      )}
-      {!loading && !error && data && (
-        <div style={{ width: "100%", height: 380 }}>
-          <Doughnut data={data} options={options} />
-        </div>
-      )}
-      {!loading && !error && chartData && !data && (
-        <p>표시할 데이터가 없습니다. 기간/연령대 선택을 확인해주세요.</p>
-      )}
+  return (
+    <div className="card chart-container">
+      <div style={{ height: "450px" }}>
+        <Line options={options} data={{ labels, datasets }} />
+      </div>
     </div>
   );
 }
+
+export default ShoppingChart;

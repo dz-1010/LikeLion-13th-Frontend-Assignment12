@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useShopping } from "../context/ShoppingProvider";
 
 function SearchForm() {
-  const [startDate, setStartDate] = useState("2025-01-01");
-  const [endDate, setEndDate] = useState("2025-09-30");
+  const [startDate, setStartDate] = useState("2024-01-01");
+  const [endDate, setEndDate] = useState("2024-12-31");
   const [keyword, setKeyword] = useState("아이폰");
+  const [timeUnit, setTimeUnit] = useState("month");
 
   const { fetchShoppingData } = useShopping();
 
@@ -19,6 +20,7 @@ function SearchForm() {
       endDate,
       keyword,
       category,
+      timeUnit,
       ages,
     };
 
@@ -47,6 +49,19 @@ function SearchForm() {
             onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
+        <div className="form-group">
+          <label htmlFor="timeUnit">분석 단위</label>
+          <select
+            id="timeUnit"
+            value={timeUnit}
+            onChange={(e) => setTimeUnit(e.target.value)}
+          >
+            <option value="date">일간</option>
+            <option value="week">주간</option>
+            <option value="month">월간</option>
+          </select>
+        </div>
+
         <div className="form-group keywords-group">
           <label htmlFor="keywords">키워드</label>
           <input
